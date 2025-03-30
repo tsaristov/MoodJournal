@@ -120,7 +120,7 @@ class MoodCoordinateMapper:
 # x: -100 to 100 (negative to positive emotion)
 # y: -100 to 100 (low to high energy) 
 
-def main():
+if __name__ == "__main__":
     # Modify these values to get different emotions
     x = 50   # Somewhat positive emotion
     y = 70   # High energy
@@ -147,6 +147,3 @@ def main():
         
     except Exception as e:
         print(f"Error: {str(e)}")
-
-if __name__ == "__main__":
-    main()
