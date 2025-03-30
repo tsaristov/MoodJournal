@@ -1,0 +1,489 @@
+/* Base styling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+h1, h2, h3 {
+    font-weight: 700;
+    color: #222;
+}
+
+h1 {
+    font-size: 2.2rem;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+}
+
+h3 {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+}
+
+/* Sections */
+.section {
+    margin-bottom: 40px;
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.section.hidden {
+    display: none;
+}
+
+/* Dashboard layout */
+.dashboard-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.entries-section {
+    flex: 1;
+    min-width: 300px;
+}
+
+.chart-section {
+    flex: 1;
+    min-width: 300px;
+}
+
+/* Time filter */
+.time-filter {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.time-filter label {
+    font-weight: 600;
+}
+
+.time-filter select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background-color: white;
+    font-size: 0.9rem;
+}
+
+/* Entries list */
+.entries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.entry-card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
+}
+
+.entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.emotion-tag {
+    display: none; /* Hide text emotion tag as we'll use emoji */
+}
+
+.entry-date {
+    font-size: 0.85rem;
+    color: #777;
+}
+
+.entry-prompt {
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+}
+
+.entry-response {
+    color: #555;
+    font-size: 1rem;
+}
+
+.no-entries {
+    text-align: center;
+    color: #888;
+    font-style: italic;
+    padding: 20px;
+}
+
+/* Chart containers */
+.chart-container {
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
+    height: 300px;
+}
+
+/* Buttons */
+.primary-btn {
+    background-color: #3b9136;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.primary-btn:hover {
+    background-color: #2e7929;
+}
+
+.primary-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.new-entry-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+/* Emotion picker */
+.emotion-picker-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.coordinate-picker {
+    width: 100%;
+    position: relative;
+}
+
+.coordinate-labels {
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+.y-axis-top, .y-axis-bottom, .x-axis-left, .x-axis-right {
+    position: absolute;
+    font-weight: 600;
+    color: #555;
+}
+
+.y-axis-top {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.y-axis-bottom {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.x-axis-left {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.x-axis-right {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.emotion-graph {
+    width: 100%;
+    height: 400px;
+    border-radius: 12px;
+    background-color: white;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
+    cursor: pointer;
+}
+
+.emotion-indicator {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.selected-emotion {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.coordinates {
+    font-size: 0.85rem;
+    color: #777;
+    margin-top: 4px;
+}
+
+/* Direct input */
+.direct-input {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 10px;
+}
+
+.direct-input p {
+    color: #777;
+}
+
+.input-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-weight: 600;
+}
+
+.input-group input {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+}
+
+/* Emotion actions */
+.emotion-actions {
+    margin-top: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* Journal entry section */
+.journal-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
+}
+
+.emotion-summary {
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+}
+
+.prompt-container {
+    margin-bottom: 25px;
+}
+
+.response-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.response-container label {
+    font-weight: 600;
+}
+
+.response-container textarea {
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    resize: vertical;
+    font-size: 1rem;
+    min-height: 150px;
+}
+
+.journal-actions {
+    display: flex;
+    justify-content: center;
+}
+
+/* Emotion dot colors */
+.emotion-graph .emotion-dot {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .dashboard-container {
+        flex-direction: column;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+    
+    .emotion-graph {
+        height: 300px;
+    }
+    
+    .journal-container {
+        padding: 20px;
+    }
+}
+
+/* Add emojis for emotion entries */
+.entries-list .entry-card:nth-of-type(1)::before {
+    content: "😊";
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.entries-list .entry-card:nth-of-type(2)::before {
+    content: "😌";
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.entries-list .entry-card:nth-of-type(3)::before {
+    content: "😣";
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* Emotion grid additions */
+.emotion-graph::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: #eee;
+}
+
+.emotion-graph::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: 100%;
+    background-color: #eee;
+}
+
+/* Emotional State dots */
+.emotion-red-dot {
+    background-color: #ff4d4d;
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    top: 35%;
+    left: 25%;
+}
+
+.emotion-orange-dot {
+    background-color: #ff9933;
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    top: 35%;
+    left: 40%;
+}
+
+.emotion-yellow-dot {
+    background-color: #ffcc00;
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    top: 35%;
+    left: 75%;
+}
+
+.emotion-blue-dot {
+    background-color: #3366ff;
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    top: 65%;
+    left: 35%;
+}
+
+.emotion-green-dot {
+    background-color: #33cc66;
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    top: 65%;
+    left: 65%;
+}
+
+.emotion-neutral-dot {
+    background-color: transparent;
+    border: 2px solid #ddd;
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.emotion-neutral-dot::before {
+    content: "🙂";
+    font-size: 18px;
+}

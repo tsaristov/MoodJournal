@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood Journal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Mood Journal</h1>
+        </header>
+        
+        <section id="dashboard" class="section">
+            <div class="dashboard-container">
+                <div class="entries-section">
+                    <h2>Past Entries</h2>
+                    <div class="time-filter">
+                        <label for="time-period">View entries from:</label>
+                        <select id="time-period" onchange="changePeriod(this.value)">
+                            <option value="week" {% if selected_period == 'week' %}selected{% endif %}>Past Week</option>
+                            <option value="month" {% if selected_period == 'month' %}selected{% endif %}>Past Month</option>
+                            <option value="year" {% if selected_period == 'year' %}selected{% endif %}>Past Year</option>
+                            <option value="all" {% if selected_period == 'all' %}selected{% endif %}>All Time</option>
+                        </select>
+                    </div>
+                    
+                    <div class="entries-list">
+                        {% if entries %}
+                            {% for entry in entries %}
+                                <div class="entry-card">
+                                    <div class="entry-header">
+                                        <span class="emotion-tag">{{ entry.emotion }}</span>
+                                        <span class="entry-date">{{ entry.timestamp }}</span>
+                                    </div>
+                                    <div class="entry-prompt">{{ entry.prompt }}</div>
+                                    <div class="entry-response">{{ entry.response }}</div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="no-entries">No journal entries yet. Create your first entry below!</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="chart-section">
+                    <h2>Emotional Analysis</h2>
+                    <div class="time-filter">
+                        <label for="chart-time-period">Last 7 days</label>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="emotions-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="new-entry-container">
+                <button id="new-entry-btn" class="primary-btn" onclick="scrollToSection('emotion-picker')">Record New Journal Prompt</button>
+            </div>
+        </section>
+        
+        <section id="emotion-picker" class="section hidden">
+            <h2>Select Emotional State</h2>
+            
+            <div class="emotion-picker-container">
+                <div class="coordinate-picker">
+                    <div class="coordinate-labels">
+                        <div class="y-axis-top">High Energy</div>
+                        <div class="x-axis-left">Negative</div>
+                        <div class="x-axis-right">Positive</div>
+                        <div class="y-axis-bottom">Low Energy</div>
+                    </div>
+                    <p class="text-center">Click on the graph or enter emotions separated by commas</p>
+                    <p class="text-center"><strong>X-axis:</strong> Negative ← Emotions → Positive<br><strong>Y-axis:</strong> Low Energy ↑ High Energy</p>
+                    
+                    <div id="emotion-graph" class="emotion-graph">
+                        <div id="emotion-indicator" class="emotion-indicator hidden"></div>
+                        <div class="emotion-red-dot"></div>
+                        <div class="emotion-orange-dot"></div>
+                        <div class="emotion-yellow-dot"></div>
+                        <div class="emotion-blue-dot"></div>
+                        <div class="emotion-green-dot"></div>
+                        <div class="emotion-neutral-dot"></div>
+                    </div>
+                    <div id="selected-emotion" class="selected-emotion">
+                        <span>Click on the graph to select an emotion</span>
+                    </div>
+                </div>
+                
+                <div class="direct-input">
+                    <p>- OR -</p>
+                    <div class="input-group">
+                        <label for="emotion-input">Or enter emotions (😊, 😌)</label>
+                        <input type="text" id="emotion-input" placeholder="e.g., happy, anxious, excited">
+                    </div>
+                </div>
+                
+                <div class="emotion-actions">
+                    <button id="emotion-confirm-btn" class="primary-btn" disabled onclick="confirmEmotion()">Next</button>
+                </div>
+            </div>
+        </section>
+        
+        <section id="journal-entry" class="section hidden">
+            <h2>Journal Entry</h2>
+            
+            <div class="journal-container">
+                <div class="emotion-summary">
+                    <p>You're feeling: <span id="journal-emotion"></span></p>
+                </div>
+                
+                <div class="prompt-container">
+                    <h3>Today's Prompt:</h3>
+                    <p id="journal-prompt"></p>
+                </div>
+                
+                <div class="response-container">
+                    <label for="journal-response">Your thoughts:</label>
+                    <textarea id="journal-response" rows="10" placeholder="Write your thoughts here..."></textarea>
+                </div>
+                
+                <div class="journal-actions">
+                    <button id="save-entry-btn" class="primary-btn" onclick="saveJournalEntry()">Save Entry</button>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <script>
+        // Store state
+        let currentEmotion = null;
+        let currentCoordinates = null;
+        let currentPrompt = null;
+        
+        // Load emotion data for charts
+        let emotionData = {};
+        try {
+            emotionData = JSON.parse('{{ emotion_data|safe }}');
+        } catch (e) {
+            emotionData = { emotions: [], timeline: [] };
+        }
+        
+        // Initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            initEmotionsChart();
+            initEmotionGraph();
+        });
+        
+        function initEmotionsChart() {
+            // Create sample data if none exists
+            const sampleData = {
+                labels: ['😊', '😌', '😣', '😇', '😤'],
+                datasets: [{
+                    label: 'Emotion Count',
+                    data: [1, 1, 1, 1, 1],
+                    backgroundColor: [
+                        '#ffcc00', // yellow
+                        '#33cc66', // green  
+                        '#ff4d4d', // red
+                        '#3366ff', // blue
+                        '#ff9933'  // orange
+                    ],
+                    borderWidth: 0
+                }]
+            };
+            
+            const ctx = document.getElementById('emotions-chart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: sampleData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                    }
+                }
+            });
+        }
+        
+        function initEmotionGraph() {
+            const graph = document.getElementById('emotion-graph');
+            
+            graph.addEventListener('click', function(e) {
+                const rect = graph.getBoundingClientRect();
+                
+                // Calculate coordinates from -100 to 100
+                const x = Math.round(((e.clientX - rect.left) / rect.width - 0.5) * 200);
+                const y = Math.round(((rect.height - (e.clientY - rect.top)) / rect.height - 0.5) * 200);
+                
+                // Position indicator
+                const indicator = document.getElementById('emotion-indicator');
+                indicator.style.left = `${e.clientX - rect.left}px`;
+                indicator.style.top = `${e.clientY - rect.top}px`;
+                indicator.classList.remove('hidden');
+                
+                // Get emotion from coordinates
+                getEmotionFromCoordinates(x, y);
+            });
+            
+            // Listen for direct emotion input
+            document.getElementById('emotion-input').addEventListener('input', function(e) {
+                if (e.target.value.trim()) {
+                    currentEmotion = e.target.value.trim();
+                    currentCoordinates = null;
+                    document.getElementById('selected-emotion').innerHTML = `Selected emotion: <strong>${currentEmotion}</strong>`;
+                    document.getElementById('emotion-confirm-btn').disabled = false;
+                } else {
+                    document.getElementById('emotion-confirm-btn').disabled = !currentEmotion;
+                }
+            });
+        }
+        
+        function getEmotionFromCoordinates(x, y) {
+            // Simulate API call - in a real implementation, this would call the server
+            let emotion;
+            
+            // Determine emotion based on quadrant
+            if (x > 0 && y > 0) {
+                emotion = "excited";
+            } else if (x > 0 && y < 0) {
+                emotion = "content";
+            } else if (x < 0 && y > 0) {
+                emotion = "angry";
+            } else {
+                emotion = "sad";
+            }
+            
+            // Check proximity to colored dots
+            const dotPositions = [
+                { name: "angry", x: -50, y: 30 },
+                { name: "frustrated", x: -20, y: 30 },
+                { name: "happy", x: 50, y: 30 },
+                { name: "calm", x: -30, y: -30 },
+                { name: "content", x: 30, y: -30 }
+            ];
+            
+            // Find the closest dot
+            let closestDot = null;
+            let minDistance = 9999;
+            
+            for (const dot of dotPositions) {
+                const distance = Math.sqrt(Math.pow(dot.x - x, 2) + Math.pow(dot.y - y, 2));
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestDot = dot;
+                }
+            }
+            
+            // Use the closest dot's emotion if it's close enough
+            if (minDistance < 50) {
+                emotion = closestDot.name;
+            }
+            
+            currentEmotion = emotion;
+            currentCoordinates = { x, y };
+            
+            document.getElementById('selected-emotion').innerHTML = `
+                Selected emotion: <strong>${currentEmotion}</strong>
+                <div class="coordinates">(${x}, ${y})</div>
+            `;
+            document.getElementById('emotion-confirm-btn').disabled = false;
+        }
+        
+        function confirmEmotion() {
+            if (!currentEmotion) {
+                alert('Please select or enter an emotion first.');
+                return;
+            }
+            
+            // Generate a prompt based on the emotion
+            // In a real app, this would be done server-side
+            const promptsByEmotion = {
+                "happy": "What made you smile today?",
+                "excited": "What are you looking forward to?",
+                "content": "What are you grateful for today?",
+                "calm": "How did you practice self-care?",
+                "relaxed": "What moment brought you peace today?",
+                "angry": "What triggered strong emotions today?",
+                "frustrated": "What challenged you today?",
+                "sad": "What's been weighing on your mind?",
+                "anxious": "What worries are you carrying right now?",
+                "tired": "What drained your energy today?"
+            };
+            
+            currentPrompt = promptsByEmotion[currentEmotion] || `Tell me more about feeling ${currentEmotion}`;
+            
+            // Update journal section
+            document.getElementById('journal-emotion').textContent = currentEmotion;
+            document.getElementById('journal-prompt').textContent = currentPrompt;
+            
+            // Show journal section
+            scrollToSection('journal-entry');
+        }
+        
+        function saveJournalEntry() {
+            const response = document.getElementById('journal-response').value.trim();
+            
+            if (!response) {
+                alert('Please write a response to the prompt.');
+                return;
+            }
+            
+            // In a real app, this would be saved to the server
+            // For this demo, we'll just simulate success
+            
+            // Reset form
+            document.getElementById('emotion-input').value = '';
+            document.getElementById('journal-response').value = '';
+            
+            // Reset state
+            currentEmotion = null;
+            currentCoordinates = null;
+            currentPrompt = null;
+            
+            // Hide indicator
+            document.getElementById('emotion-indicator').classList.add('hidden');
+            
+            // Reset selected emotion
+            document.getElementById('selected-emotion').innerHTML = '<span>Click on the graph to select an emotion</span>';
+            document.getElementById('emotion-confirm-btn').disabled = true;
+            
+            // For demo purposes, simply go back to dashboard
+            alert('Journal entry saved successfully!');
+            scrollToSection('dashboard');
+        }
+        
+        function scrollToSection(sectionId) {
+            // Hide all sections first
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show target section and ensure it's visible
+            const targetSection = document.getElementById(sectionId);
+            targetSection.classList.remove('hidden');
+            
+            // Force a reflow to ensure the section is visible before scrolling
+            void targetSection.offsetHeight;
+            
+            // Scroll to section with smooth behavior
+            targetSection.scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+        
+        function changePeriod(period) {
+            // In a real app, this would reload data from the server
+            // For this demo, we'll just simulate a reload
+            alert(`Changed time period to: ${period}`);
+        }
+    </script>
+</body>
+</html>
