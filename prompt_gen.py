@@ -17,16 +17,37 @@ def create_db():
     """Creates the database and table if it doesn't exist."""
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS journal_entries (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT NOT NULL,
-        emotion TEXT NOT NULL,
-        prompt TEXT NOT NULL,
-        response TEXT NOT NULL
-    )
-    ''')
-    conn.commit()
+    
+    # First check if the table exists
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='journal_entries'")
+    table_exists = cursor.fetchone() is not None
+    
+    if not table_exists:
+        # Create the table if it doesn't exist
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS journal_entries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT NOT NULL,
+            emotion TEXT NOT NULL,
+            prompt TEXT NOT NULL,
+            response TEXT NOT NULL,
+            x_coordinate INTEGER,
+            y_coordinate INTEGER
+        )
+        ''')
+        conn.commit()
+    else:
+        # Check if the coordinates columns exist
+        cursor.execute("PRAGMA table_info(journal_entries)")
+        columns = [column[1] for column in cursor.fetchall()]
+        
+        # Add coordinates columns if they don't exist
+        if 'x_coordinate' not in columns:
+            cursor.execute('ALTER TABLE journal_entries ADD COLUMN x_coordinate INTEGER')
+        if 'y_coordinate' not in columns:
+            cursor.execute('ALTER TABLE journal_entries ADD COLUMN y_coordinate INTEGER')
+        conn.commit()
+        
     conn.close()
 
 def generate_custom_prompt(emotion):
@@ -125,14 +146,23 @@ def generate_prompt(emotion):
         
     return prompt
 
-def save_entry(emotion, prompt, response):
+def save_entry(emotion, prompt, response, x_coordinate=None, y_coordinate=None):
     """Saves the journal entry to the SQLite database."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-    cursor.execute('''
-    INSERT INTO journal_entries (timestamp, emotion, prompt, response)
-    VALUES (?, ?, ?, ?)
-    ''', (timestamp, emotion, prompt, response))
+    
+    # If coordinates are provided, save them too
+    if x_coordinate is not None and y_coordinate is not None:
+        cursor.execute('''
+        INSERT INTO journal_entries (timestamp, emotion, prompt, response, x_coordinate, y_coordinate)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ''', (timestamp, emotion, prompt, response, x_coordinate, y_coordinate))
+    else:
+        cursor.execute('''
+        INSERT INTO journal_entries (timestamp, emotion, prompt, response)
+        VALUES (?, ?, ?, ?)
+        ''', (timestamp, emotion, prompt, response))
+        
     conn.commit()
     conn.close()
